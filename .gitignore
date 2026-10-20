@@ -1,0 +1,22 @@
+# Experiment outputs and checkpoints
+results/*
+!results/.gitkeep
+checkpoints/
+*.safetensors
+*.bin
+*.pt
+
+# Python / environments
+__pycache__/
+*.pyc
+.venv/
+venv/
+.cache/
+
+# Secrets and logs
+.env
+*.log
+slurm-*.out
+
+# macOS
+.DS_Store
