@@ -27,6 +27,8 @@ from peft import LoraConfig, PeftModel
 from transformers import AutoModelForCausalLM, AutoTokenizer, set_seed
 from trl import GRPOConfig, GRPOTrainer
 
+from rewards import build_rewards
+
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
 
@@ -68,20 +70,6 @@ def load_data(cfg):
         lambda row: {"prompt": [{"role": "user", "content": row["prompt"]}], "answer": str(row["answer"])},
         remove_columns=ds.column_names,
     )
-
-
-def completion_text(completion):
-    # Chat prompts yield completions as [{"role": "assistant", "content": ...}].
-    return completion[0]["content"] if isinstance(completion, list) else completion
-
-
-def task_reward(prompts, completions, answer, **kwargs):
-    """1.0 if the reference answer appears after the reasoning (</think>), else 0.0."""
-    rewards = []
-    for completion, ref in zip(completions, answer):
-        final = completion_text(completion).rsplit("</think>", 1)[-1]
-        rewards.append(1.0 if ref.strip().lower() in final.lower() else 0.0)
-    return rewards
 
 
 def generate(model, tokenizer, prompt, max_new_tokens):
@@ -136,10 +124,12 @@ def main():
 
         dataset = load_data(cfg)
         print(f"Loaded {len(dataset)} training examples")
+        reward_funcs, reward_weights = build_rewards(cfg, tokenizer)
+        metadata["rewards"] = cfg.get("rewards", [{"name": "task"}])
 
         trainer = GRPOTrainer(
             model=model,
-            reward_funcs=[task_reward],
+            reward_funcs=reward_funcs,
             args=GRPOConfig(
                 output_dir=str(output_dir / "trainer"),
                 seed=t["seed"],
@@ -150,6 +140,8 @@ def main():
                 num_generations=t["num_generations"],
                 max_completion_length=t["max_completion_length"],
                 beta=t["beta"],
+                temperature=t.get("temperature", 1.0),
+                reward_weights=reward_weights,
                 gradient_checkpointing=True,
                 bf16=True,
                 logging_steps=1,
@@ -178,6 +170,8 @@ def main():
         print(f"Saved adapter after {trainer.state.global_step} step(s) to {adapter_dir}")
 
         # Reload from disk to confirm the saved adapter is usable on its own.
+        # Release the accelerator's references to the model/optimizer first so GPU memory is freed.
+        trainer.accelerator.free_memory()
         del trainer, model
         gc.collect()
         torch.cuda.empty_cache()

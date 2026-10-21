@@ -24,3 +24,8 @@ slurm-*.out
 # Model weights (downloaded locally, never committed)
 weights/*
 !weights/.gitkeep
+
+# Generated datasets: regenerate rather than commit (data/trial.jsonl is hand-written and tracked)
+# scripts/make_math_data.py (downloads MATH) and scripts/make_prob_data.py (deterministic, seed 0)
+data/math_*.jsonl
+data/prob_*.jsonl

@@ -17,7 +17,9 @@ training:
   per_device_train_batch_size: 2
   gradient_accumulation_steps: 1
   num_generations: 2
-  max_completion_length: 512
+  # The Think model used 1.5k-2.4k tokens on simple probability prompts; at 512 it
+  # rarely reaches </think>, so every reward would be 0.
+  max_completion_length: 2048
   beta: 0.01
 
 lora:

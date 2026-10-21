@@ -1,0 +1,3 @@
+A fair coin is flipped 4 times. What is the probability of getting at least 2 heads?
+A fair six-sided die is rolled 5 times. What is the expected number of 4s seen?
+There are two coins: a loaded coin that lands heads with probability 0.6, and a fair coin. One coin is selected uniformly at random and flipped, and it lands heads. What is the probability that the loaded coin was selected?

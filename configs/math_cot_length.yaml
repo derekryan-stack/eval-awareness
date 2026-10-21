@@ -1,0 +1,45 @@
+# Length-penalty run on MATH Level 4-5: task reward minus a penalty on reasoning (pre-</think>) tokens.
+# Paired with configs/math_task.yaml (coef 0), which differs only in the cot_length coef.
+# DATASET_PATH=data/math_train.jsonl (generate with scripts/make_math_data.py).
+
+model:
+  name: "OLMo-3.1-32B-Think"
+  path: null
+
+dataset:
+  path: null
+  max_samples: 300
+
+training:
+  seed: 42
+  # 100 steps x 2 prompts = 200 of the 300 training problems (no repeats).
+  max_steps: 100
+  learning_rate: 1.0e-4
+  # 8 completions per step = 2 prompts x 4 generations.
+  per_device_train_batch_size: 8
+  gradient_accumulation_steps: 1
+  num_generations: 4
+  # MATH L4-5 needs more reasoning than the toy problems; at 4096 some completions are
+  # truncated (reward 0), which is why the task-only control run is needed.
+  max_completion_length: 4096
+  temperature: 0.6
+  beta: 0.01
+
+rewards:
+  - name: task
+  # reward = task - 0.5 * reasoning_tokens / max_completion_length; correctness (1.0) still dominates.
+  - name: cot_length
+    coef: 0.5
+
+lora:
+  r: 16
+  alpha: 32
+  dropout: 0.05
+  target_modules: ["q_proj", "k_proj", "v_proj", "o_proj"]
+
+verify:
+  prompt: "What is 2 + 2? Answer with a single number."
+  max_new_tokens: 64
+
+output:
+  dir: "results/math_cot_length"

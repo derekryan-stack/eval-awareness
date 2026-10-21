@@ -1,0 +1,47 @@
+# CoT-length run on the generated probability problems: the reward is only a reasoning-length
+# penalty (correctness is logged but not rewarded).
+# DATASET_PATH=data/prob_train.jsonl (generate with scripts/make_prob_data.py).
+
+model:
+  name: "OLMo-3.1-32B-Think"
+  path: null
+
+dataset:
+  path: null
+  max_samples: 100
+
+training:
+  seed: 42
+  # 100 steps x 2 prompts = 200 prompts (2 passes over the 100 training problems).
+  max_steps: 100
+  learning_rate: 1.0e-4
+  # 8 completions per step = 2 prompts x 4 generations.
+  per_device_train_batch_size: 8
+  gradient_accumulation_steps: 1
+  num_generations: 4
+  # Base model used ~1.5k-2.4k reasoning tokens on these problems; 3072 leaves headroom.
+  max_completion_length: 3072
+  temperature: 0.6
+  beta: 0.01
+
+rewards:
+  # Weight 0: correctness is logged (rewards/task_reward/mean) but does not affect training.
+  - name: task
+    weight: 0.0
+  # The only training signal: reward = -reasoning_tokens / max_completion_length.
+  # GRPO normalizes rewards within each group, so the coef's scale does not matter.
+  - name: cot_length
+    coef: 1.0
+
+lora:
+  r: 16
+  alpha: 32
+  dropout: 0.05
+  target_modules: ["q_proj", "k_proj", "v_proj", "o_proj"]
+
+verify:
+  prompt: "What is 2 + 2? Answer with a single number."
+  max_new_tokens: 64
+
+output:
+  dir: "results/prob_cot_length"
