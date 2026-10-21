@@ -20,3 +20,7 @@ slurm-*.out
 
 # macOS
 .DS_Store
+
+# Model weights (downloaded locally, never committed)
+weights/*
+!weights/.gitkeep

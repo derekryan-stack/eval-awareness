@@ -2,6 +2,8 @@
 
 A minimal end-to-end trial. It loads the OLMo 3.1-32B-Think checkpoint, runs a few GRPO steps with LoRA and a simple task reward, saves the adapter, then reloads it and generates a response. Its only purpose is to validate the training setup; the actual research experiment comes later.
 
+The model weights go into the weights dir, and the weights should not be committed.
+
 ## Setup
 
 ```bash
