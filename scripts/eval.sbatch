@@ -7,11 +7,12 @@
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=160G
 #SBATCH --time=03:00:00
-#SBATCH --output=results/eval/slurm-%j.out
+#SBATCH --output=results/slurm-eval-%j.out
 set -euo pipefail
 
 ENV="${ENV:-/gpfs/radev/project/krishnaswamy_smita/gss34/envs/eval-awareness}"
 MODEL_PATH="${MODEL_PATH:-weights/Olmo-3.1-32B-Think}"
+export HF_HUB_OFFLINE=1 HF_HUB_DISABLE_TELEMETRY=1
 
 cd "${SLURM_SUBMIT_DIR:-$(dirname "$0")/..}"
 "$ENV/bin/python" -u src/evaluate.py --model-path "$MODEL_PATH" "$@"

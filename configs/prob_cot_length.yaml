@@ -2,12 +2,15 @@
 # penalty (correctness is logged but not rewarded).
 # DATASET_PATH=data/prob_train.jsonl (generate with scripts/make_prob_data.py).
 
+experiment:
+  name: prob_cot_length
+
 model:
   name: "OLMo-3.1-32B-Think"
   path: null
 
 dataset:
-  path: null
+  path: data/prob_train.jsonl   # DATASET_PATH overrides
   max_samples: 100
 
 training:
@@ -19,6 +22,7 @@ training:
   per_device_train_batch_size: 8
   gradient_accumulation_steps: 1
   num_generations: 4
+  max_prompt_length: 512
   # Base model used ~1.5k-2.4k reasoning tokens on these problems; 3072 leaves headroom.
   max_completion_length: 3072
   temperature: 0.6
@@ -44,4 +48,4 @@ verify:
   max_new_tokens: 64
 
 output:
-  dir: "results/prob_cot_length"
+  root: results   # runs go to results/<experiment>/<timestamp>_seed<seed>[_job<id>]

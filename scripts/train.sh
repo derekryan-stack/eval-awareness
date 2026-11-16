@@ -1,19 +1,12 @@
 #!/usr/bin/env bash
-# Launch the GRPO + LoRA trial.
-# Usage: MODEL_PATH=/path/to/model DATASET_PATH=/path/to/data.jsonl bash scripts/train.sh
+# Run src/train.py with the Python on PATH (inside an allocation or an interactive GPU session).
+# Usage: CONFIG=configs/trial.yaml [MODEL_PATH=...] [DATASET_PATH=...] [OUTPUT_DIR=...] bash scripts/train.sh [train.py args]
+# For batch jobs use scripts/submit_experiment.sh, which also activates the env and checks paths.
 set -euo pipefail
 
-: "${MODEL_PATH:?Set MODEL_PATH to the base model checkpoint directory}"
-: "${DATASET_PATH:?Set DATASET_PATH to the training JSONL file}"
 CONFIG="${CONFIG:-configs/trial.yaml}"
-OUTPUT_DIR="${OUTPUT_DIR:-results/trial}"
-
 cd "$(dirname "$0")/.."
-mkdir -p "$OUTPUT_DIR"
+export HF_HUB_OFFLINE="${HF_HUB_OFFLINE:-1}" HF_HUB_DISABLE_TELEMETRY=1
 
-python src/train.py \
-  --config "$CONFIG" \
-  --model-path "$MODEL_PATH" \
-  --dataset-path "$DATASET_PATH" \
-  --output-dir "$OUTPUT_DIR" \
-  "$@"
+# MODEL_PATH, DATASET_PATH, OUTPUT_DIR, OUTPUT_ROOT and SEED are read from the environment by src/config.py.
+python -u src/train.py --config "$CONFIG" "$@"

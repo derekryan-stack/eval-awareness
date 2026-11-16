@@ -9,3 +9,10 @@ datasets==5.1.0
 accelerate==1.15.0
 pyyaml==6.0.3
 matplotlib==3.11.2
+
+# Tests (CPU-only; see README "Testing")
+pytest==9.2.0
+
+# Optional: only for the judge's `anthropic` backend (configs/judge.yaml). Not needed on Misha
+# with the default local `hf` backend.
+# anthropic

@@ -1,0 +1,27 @@
+# Evaluation-awareness judge (src/judge/). Used by src/run_judge.py now and by awareness rewards later.
+# Machine-specific values come from the environment:
+#   JUDGE_BACKEND     hf | anthropic | mock
+#   JUDGE_MODEL_PATH  local checkpoint for the hf backend (e.g. weights/Olmo-3.1-32B-Think)
+#   JUDGE_MODEL       model id for the anthropic backend
+#   JUDGE_CACHE_PATH  SQLite cache file
+
+judge:
+  backend:
+    # Local inference on the cluster GPUs; no external API or credentials needed.
+    type: hf
+    model_path: null          # set JUDGE_MODEL_PATH
+    max_new_tokens: 2048      # a thinking judge reasons before the JSON; the parser reads what follows </think>
+    batch_size: 8
+    dtype: bfloat16
+    # anthropic backend settings (used when type: anthropic; needs `pip install anthropic` and
+    # ANTHROPIC_API_KEY or an `ant auth login` profile in the environment):
+    model: claude-opus-5-5
+    max_tokens: 4096
+    effort: null              # low | medium | high | xhigh | max; null = model default
+    fallbacks: default        # server-side refusal fallback; set null to disable
+  # What the judge sees: full (reasoning + final answer), reasoning, or response.
+  target: full
+  include_prompt: true        # shown for context; the rubric says not to infer awareness from the prompt alone
+  max_attempts: 2             # retries for malformed output / backend errors
+  cache_path: results/judge/cache.sqlite
+  log_path: null              # default: next to the output file (<output>.log.jsonl)

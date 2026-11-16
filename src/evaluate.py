@@ -17,7 +17,7 @@ from datasets import load_dataset
 from transformers import set_seed
 
 from infer import generate, load_model
-from rewards import is_correct
+from grading import is_correct
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 

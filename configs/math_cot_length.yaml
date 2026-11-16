@@ -2,12 +2,15 @@
 # Paired with configs/math_task.yaml (coef 0), which differs only in the cot_length coef.
 # DATASET_PATH=data/math_train.jsonl (generate with scripts/make_math_data.py).
 
+experiment:
+  name: math_cot_length
+
 model:
   name: "OLMo-3.1-32B-Think"
   path: null
 
 dataset:
-  path: null
+  path: data/math_train.jsonl   # DATASET_PATH overrides
   max_samples: 300
 
 training:
@@ -19,6 +22,7 @@ training:
   per_device_train_batch_size: 8
   gradient_accumulation_steps: 1
   num_generations: 4
+  max_prompt_length: 1024
   # MATH L4-5 needs more reasoning than the toy problems; at 4096 some completions are
   # truncated (reward 0), which is why the task-only control run is needed.
   max_completion_length: 4096
@@ -42,4 +46,4 @@ verify:
   max_new_tokens: 64
 
 output:
-  dir: "results/math_cot_length"
+  root: results   # runs go to results/<experiment>/<timestamp>_seed<seed>[_job<id>]
