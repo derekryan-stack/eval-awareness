@@ -1,0 +1,49 @@
+# Task reward + CoT length penalty.
+# Same data and hyperparameters as configs/prob_cot_length.yaml; only `rewards:` differs.
+
+experiment:
+  name: prob_length_penalty
+  description: "Task reward + CoT length penalty."
+
+model:
+  name: "OLMo-3.1-32B-Think"
+  path: null
+
+dataset:
+  path: data/prob_train.jsonl   # DATASET_PATH overrides
+  max_samples: 100
+
+training:
+  seed: 42
+  # 100 steps x 2 prompts = 200 prompts (2 passes over the 100 training problems).
+  max_steps: 100
+  learning_rate: 1.0e-4
+  # 8 completions per step = 2 prompts x 4 generations.
+  per_device_train_batch_size: 8
+  gradient_accumulation_steps: 1
+  num_generations: 4
+  max_prompt_length: 512
+  # Base model used ~1.5k-2.4k reasoning tokens on these problems; 3072 leaves headroom.
+  max_completion_length: 3072
+  temperature: 0.6
+  beta: 0.01
+
+rewards:
+  - name: task
+    weight: 1.0
+  - name: cot_length
+    weight: 1.0
+    coef: 1.0
+
+lora:
+  r: 16
+  alpha: 32
+  dropout: 0.05
+  target_modules: ["q_proj", "k_proj", "v_proj", "o_proj"]
+
+verify:
+  prompt: "What is 2 + 2? Answer with a single number."
+  max_new_tokens: 64
+
+output:
+  root: results   # runs go to results/<experiment>/<timestamp>_seed<seed>[_job<id>]

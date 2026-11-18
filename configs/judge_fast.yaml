@@ -1,0 +1,24 @@
+# Fast, offline-friendly evaluation-awareness judge for use INSIDE GRPO training (awareness rewards).
+# Compute nodes on Misha have no internet, so this uses the local `hf` backend only (no API).
+#
+# Intended model: a small NON-thinking instruct model (~7-8B, e.g. Qwen3-8B-Instruct / Llama-3.1-8B-Instruct)
+# downloaded to project storage beforehand. A ~16 GB bf16 judge fits beside the 32B policy on one
+# H200, so the awareness runs need 1 GPU instead of 2. Set the path with:
+#   JUDGE_MODEL_PATH=/gpfs/radev/project/krishnaswamy_smita/gss34/models/<judge-model>
+# Use it from a reward entry:  judge_config: configs/judge_fast.yaml
+#
+# Validate agreement before training (data/judge_samples.jsonl) and compare against configs/judge.yaml:
+#   JUDGE_MODEL_PATH=... python src/run_judge.py --config configs/judge_fast.yaml --input data/judge_samples.jsonl
+
+judge:
+  backend:
+    type: hf
+    model_path: null          # set JUDGE_MODEL_PATH (required)
+    max_new_tokens: 256       # JSON only (evidence + explanation are short); no reasoning prefix
+    batch_size: 8             # one training step's completions fit in a single batch
+    dtype: bfloat16
+  target: full                # reasoning | response | full; "reasoning" shortens the judge input
+  include_prompt: true
+  max_attempts: 2             # a malformed JSON retries once, then the sample is invalid (None reward)
+  cache_path: results/judge/cache_fast.sqlite   # separate from the 32B judge's cache
+  log_path: null
